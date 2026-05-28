@@ -4,92 +4,423 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analysis Result - Enterprise AI Resume Analyzer</title>
+    <link rel="icon" type="image/png" href="/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .text-glow {
+            text-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        /* ─── Skill Modal ─── */
+        #skill-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        #skill-modal.open {
+            display: flex;
+        }
+        #modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(9, 14, 29, 0.88);
+            backdrop-filter: blur(6px);
+        }
+        #modal-container {
+            position: relative;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 2rem;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.1);
+            z-index: 10000;
+            animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalSlide {
+            from { transform: translateY(20px) scale(0.97); opacity: 0; }
+            to   { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        #modal-close {
+            position: absolute;
+            top: 1rem; right: 1rem;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            width: 32px; height: 32px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+            transition: background 0.2s, color 0.2s;
+        }
+        #modal-close:hover { background: rgba(239,68,68,0.15); color: #fca5a5; }
+        .modal-body { display: flex; flex-direction: column; gap: 1.25rem; }
+        .modal-section {}
+        .modal-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 0.4rem;
+        }
+        .modal-section p {
+            font-size: 0.875rem;
+            color: #cbd5e1;
+            line-height: 1.65;
+            margin: 0;
+        }
+        .resource-link {
+            display: block;
+            margin-top: 0.4rem;
+            color: #818cf8;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+        .resource-link:hover { color: #a5b4fc; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-8">
+<body class="bg-gradient-to-tr from-slate-950 via-indigo-950 to-slate-950 text-slate-100 min-h-screen p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
+    <!-- The rest of result.html continues below -->
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/80 pb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Analysis Report</h1>
-                <p class="text-gray-500 text-sm mt-1">File: {{ filename }}</p>
+                <span class="text-xs font-semibold tracking-wider text-indigo-400 uppercase">AI Recruitment Insights</span>
+                <h1 class="text-3xl font-extrabold text-white tracking-tight mt-1">Candidate Profile Report</h1>
+                <p class="text-slate-400 text-sm mt-1 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    File: <span class="text-slate-300 font-mono">{{ filename }}</span>
+                </p>
             </div>
-            <a href="/" class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center">
+            <a href="/" class="glass-card hover:bg-indigo-950/40 text-indigo-300 hover:text-indigo-200 font-medium px-4 py-2 rounded-xl transition-all duration-200 text-sm flex items-center gap-2 border border-indigo-500/20">
                 &larr; Analyze Another
             </a>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <!-- Score Card -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 col-span-1 flex flex-col items-center justify-center">
-                <h2 class="text-lg font-semibold text-gray-700 mb-4">Market Match Score</h2>
-                <div class="relative size-40">
-                    <svg class="size-full" width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                        <path class="text-gray-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="100, 100" />
-                        <path class="text-indigo-600" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="{{ score }}, 100" />
+        <!-- Upper Grid: Score Card, Chart, & Executive Summary -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Card: Overall Score & Radar Chart -->
+            <div class="glass-card p-6 rounded-2xl flex flex-col items-center justify-between col-span-1 min-h-[380px] shadow-xl">
+                <div class="text-center w-full">
+                    <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase">Overall Match Score</h2>
+                </div>
+                
+                <div class="relative w-44 h-44 my-4">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <!-- Track -->
+                        <path class="text-slate-800/80" stroke-width="2.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <!-- Progress -->
+                        <path class="text-indigo-500 drop-shadow-[0_0_6px_rgba(99,102,241,0.5)]" stroke-width="2.5" stroke-dasharray="{{ score }}, 100" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     </svg>
-                    <div class="absolute inset-0 flex items-center justify-center flex-col">
-                        <span class="text-4xl font-bold text-indigo-900">{{ score }}</span>
-                        <span class="text-xs text-gray-500 uppercase">/ 100</span>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-5xl font-black text-white text-glow">{{ score }}</span>
+                        <span class="text-[10px] tracking-wider text-slate-500 uppercase mt-0.5">/ 100 points</span>
+                    </div>
+                </div>
+
+                <div class="w-full pt-4 border-t border-slate-800/60 text-center">
+                    {% if score >= 80 %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">✨ Highly Recommended</span>
+                    {% elif score >= 50 %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/25">⚠️ Portfolio Review Suggested</span>
+                    {% else %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/25">❌ Needs Upskilling</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Middle Card: Radar Chart Breakdown -->
+            <div class="glass-card p-6 rounded-2xl col-span-1 flex flex-col justify-between shadow-xl">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase text-center mb-2">Analysis Dimensions</h2>
+                <div class="relative h-64 flex items-center justify-center">
+                    <canvas id="metricsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Card: Executive Summary & Section Checklist -->
+            <div class="glass-card p-6 rounded-2xl col-span-1 flex flex-col justify-between shadow-xl gap-4">
+                <div>
+                    <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase mb-3">Executive Summary</h2>
+                    <p class="text-slate-300 leading-relaxed text-sm bg-slate-950/40 p-4 rounded-xl border border-slate-800/40">
+                        {{ summary }}
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">Resume Structure Health</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <!-- Experience -->
+                        <div class="flex items-center justify-between p-2 rounded-lg {% if 'experience' in sections_found %}bg-emerald-500/5 border border-emerald-500/10 text-emerald-300{% else %}bg-rose-500/5 border border-rose-500/10 text-rose-300{% endif %}">
+                            <span class="font-medium">Experience</span>
+                            <span>
+                                {% if 'experience' in sections_found %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                {% else %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <!-- Education -->
+                        <div class="flex items-center justify-between p-2 rounded-lg {% if 'education' in sections_found %}bg-emerald-500/5 border border-emerald-500/10 text-emerald-300{% else %}bg-rose-500/5 border border-rose-500/10 text-rose-300{% endif %}">
+                            <span class="font-medium">Education</span>
+                            <span>
+                                {% if 'education' in sections_found %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                {% else %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <!-- Skills -->
+                        <div class="flex items-center justify-between p-2 rounded-lg {% if 'skills' in sections_found %}bg-emerald-500/5 border border-emerald-500/10 text-emerald-300{% else %}bg-rose-500/5 border border-rose-500/10 text-rose-300{% endif %}">
+                            <span class="font-medium">Skills Sec.</span>
+                            <span>
+                                {% if 'skills' in sections_found %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                {% else %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <!-- Projects -->
+                        <div class="flex items-center justify-between p-2 rounded-lg {% if 'projects' in sections_found %}bg-emerald-500/5 border border-emerald-500/10 text-emerald-300{% else %}bg-rose-500/5 border border-rose-500/10 text-rose-300{% endif %}">
+                            <span class="font-medium">Projects</span>
+                            <span>
+                                {% if 'projects' in sections_found %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                {% else %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Summary Card -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 col-span-2">
-                <h2 class="text-lg font-semibold text-gray-700 mb-2">Executive Summary</h2>
-                <p class="text-gray-600 leading-relaxed">{{ summary }}</p>
-                
-                <div class="mt-4 pt-4 border-t border-gray-100">
-                    <h3 class="text-sm font-medium text-gray-500 mb-2">Recommendation</h3>
-                    {% if score >= 80 %}
-                        <p class="text-green-600 font-medium">✨ Highly Recommended for Interview</p>
-                    {% elif score >= 50 %}
-                        <p class="text-yellow-600 font-medium">⚠️ Review Portfolio / Technical Screen Suggested</p>
-                    {% else %}
-                        <p class="text-red-600 font-medium">❌ Needs significant upskilling</p>
-                    {% endif %}
-                </div>
-            </div>
         </div>
 
+        <!-- Middle Grid: Identified Skills vs Gaps -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Found Skills -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="text-lg font-semibold text-green-700 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Identified Strengths
+            
+            <!-- Strengths Card -->
+            <div class="glass-card p-6 rounded-2xl shadow-lg border-t-2 border-emerald-500/30">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Identified Strengths <span class="text-xs text-indigo-400 font-normal lowercase">(click for details)</span>
                 </h2>
                 <div class="flex flex-wrap gap-2">
                     {% for skill in found_skills %}
-                        <span class="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-medium border border-green-100">{{ skill | title }}</span>
+                        <span data-skill="{{ skill }}" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-3 py-1.5 rounded-xl text-xs font-semibold border border-emerald-500/20 transition-colors uppercase cursor-pointer">
+                            {{ skill }}
+                        </span>
                     {% else %}
-                        <p class="text-gray-500 text-sm">No specific key skills identified.</p>
+                        <p class="text-slate-500 text-sm italic">No high-impact market skills identified.</p>
                     {% endfor %}
                 </div>
             </div>
 
-            <!-- Missing Skills -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="text-lg font-semibold text-red-600 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    Critical Gaps
+            <!-- Gaps Card -->
+            <div class="glass-card p-6 rounded-2xl shadow-lg border-t-2 border-rose-500/30">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Critical Skill Gaps <span class="text-xs text-indigo-400 font-normal lowercase">(click for details)</span>
                 </h2>
                 <div class="flex flex-wrap gap-2">
                     {% for skill in missing_skills %}
-                        <span class="bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm font-medium border border-red-100">{{ skill | title }}</span>
+                        <span data-skill="{{ skill }}" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 px-3 py-1.5 rounded-xl text-xs font-semibold border border-rose-500/20 transition-colors uppercase cursor-pointer">
+                            {{ skill }}
+                        </span>
                     {% else %}
-                        <p class="text-gray-500 text-sm">No major critical gaps found!</p>
+                        <p class="text-slate-500 text-sm italic">No critical skills missing!</p>
                     {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Lower Grid: NLP Metrics & Feedback Details -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Impact Analytics (Estimated Experience & Action Verbs) -->
+            <div class="glass-card p-6 rounded-2xl shadow-lg col-span-1 flex flex-col justify-between gap-4">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase">Impact Analytics</h2>
+                
+                <div class="space-y-4">
+                    <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-800/60 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 font-semibold uppercase">Estimated Experience</p>
+                            <p class="text-2xl font-bold text-white mt-1">{{ estimated_years }} Years</p>
+                        </div>
+                        <div class="p-3 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-800/60 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 font-semibold uppercase">Strong Action Verbs</p>
+                            <p class="text-2xl font-bold text-white mt-1">{{ action_verb_count }} Used</p>
+                        </div>
+                        <div class="p-3 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-[11px] text-slate-500 italic mt-2">
+                    Note: Experience and verbs are parsed using NLP patterns from raw resume text structures.
+                </p>
+            </div>
+
+            <!-- Tailored Optimization Advice -->
+            <div class="glass-card p-6 rounded-2xl shadow-lg col-span-2 flex flex-col">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase mb-4">Tailored Recommendations</h2>
+                <ul class="space-y-3 overflow-y-auto max-h-60 pr-1 flex-1">
+                    {% for note in feedback_notes %}
+                        <li class="flex items-start bg-slate-950/30 border border-slate-800/60 rounded-xl p-3.5 gap-3">
+                            <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <span class="text-sm text-slate-300 leading-relaxed">{{ note }}</span>
+                        </li>
+                    {% else %}
+                        <li class="flex items-center justify-center bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-8 gap-3 h-full">
+                            <div class="text-center">
+                                <svg class="w-12 h-12 text-emerald-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="text-sm text-emerald-300 font-semibold block">Excellent Resume Structure!</span>
+                                <span class="text-xs text-slate-400">All major checkpoints have been optimized. No core adjustments needed.</span>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Chart Configuration Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            
+            const skillsScore = {{ ((skills_score / 40) * 100) | int }};
+            const structureScore = {{ ((structure_score / 20) * 100) | int }};
+            const experienceScore = {{ ((experience_score / 25) * 100) | int }};
+            const readabilityScore = {{ ((readability_score / 15) * 100) | int }};
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Skills', 'Structure', 'Impact', 'Readability'],
+                    datasets: [{
+                        label: 'Dimension Scores',
+                        data: [skillsScore, structureScore, experienceScore, readabilityScore],
+                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                        borderColor: 'rgba(129, 140, 248, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(99, 102, 241, 1)',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(255, 255, 255, 0.08)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.08)'
+                            },
+                            pointLabels: {
+                                color: '#94a3b8',
+                                font: {
+                                    family: 'Inter',
+                                    size: 11,
+                                    weight: '600'
+                                }
+                            },
+                            ticks: {
+                                display: false,
+                                stepSize: 20
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+    <!-- Interactive Skill Modal Overlay -->
+    <div id="skill-modal">
+        <div id="modal-overlay"></div>
+        <div id="modal-container">
+            <button id="modal-close">&times;</button>
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
+                <span id="modal-icon" style="font-size:2rem;"></span>
+                <div>
+                    <h3 id="modal-title" style="font-size:1.2rem;font-weight:800;color:#f1f5f9;margin:0;">Skill Details</h3>
+                    <span id="modal-demand" style="font-size:0.75rem;font-weight:600;"></span>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4 class="modal-label">What is it?</h4>
+                    <p id="modal-desc"></p>
+                </div>
+                <div class="modal-section">
+                    <h4 class="modal-label">Why it matters for your resume</h4>
+                    <p id="modal-why"></p>
+                </div>
+                <div class="modal-section">
+                    <h4 class="modal-label">💡 Recommended Projects to add</h4>
+                    <p id="modal-projects" style="color:#6ee7b7;font-weight:600;"></p>
+                </div>
+                <div class="modal-section">
+                    <h4 class="modal-label">📚 Learning Resources</h4>
+                    <div id="modal-resources"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Skill Info Data & Modal Logic -->
+    <script src="/static/js/skill_info.js"></script>
 </body>
 </html>
+

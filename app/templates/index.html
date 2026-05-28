@@ -3,67 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise AI Resume Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Upload Resume — AI Resume Analyzer</title>
+    <link rel="icon" type="image/png" href="/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(ellipse at top left, #1e1b4b 0%, #0f172a 40%, #1e1b4b 100%);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            overflow-x: hidden;
+        }
+
+        /* Nav */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .nav-logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+        .nav-logo .icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #6366f1, #7c3aed);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+        }
+        .nav-logo span { font-size: 1rem; font-weight: 700; color: #f1f5f9; }
+        .nav-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .nav-user {
+            font-size: 0.8rem; color: #94a3b8;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 0.4rem 0.85rem;
+            border-radius: 8px;
+        }
+        .nav-user strong { color: #f1f5f9; }
+        .btn-logout {
+            font-size: 0.8rem; font-weight: 600;
+            color: #fca5a5;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            padding: 0.4rem 0.85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn-logout:hover { background: rgba(239,68,68,0.15); }
+
+        /* Card container */
+        .card {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+            margin-top: 5rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #f1f5f9;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            font-size: 0.95rem;
+            color: #64748b;
+        }
+
+        /* Dropzone area */
+        .dropzone-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 220px;
+            border: 2px dashed rgba(99, 102, 241, 0.4);
+            border-radius: 16px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.2s ease;
+        }
+        .dropzone-label:hover {
+            background: rgba(99, 102, 241, 0.05);
+            border-color: #6366f1;
+        }
+        .dropzone-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .dropzone-text {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 0.25rem;
+        }
+        .dropzone-subtext {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Button */
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #6366f1, #7c3aed);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: opacity 0.2s, transform 0.15s;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+        }
+        .btn-submit:hover { opacity: 0.92; transform: translateY(-1px); }
+        .btn-submit:active { transform: translateY(0); }
+
+        /* Error alert */
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            color: #475569;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-6">
+<body>
 
-    <div class="glass w-full max-w-2xl p-8 rounded-2xl shadow-xl">
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">AI Resume Analyzer</h1>
-            <p class="text-gray-600 text-lg">Upload a resume to get an instant market-match score.</p>
+    <!-- NAV -->
+    <nav>
+        <a href="/welcome" class="nav-logo">
+            <div class="icon">🧠</div>
+            <span>ResumeAI</span>
+        </a>
+        <div class="nav-actions">
+            <span class="nav-user">Signed in as <strong>{{ display_name }}</strong></span>
+            <a href="/logout" class="btn-logout">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="card">
+        <div class="header">
+            <h1>Analyze Your Resume</h1>
+            <p>Upload your file to get an instant breakdown of your strengths and gaps.</p>
         </div>
 
         {% if error %}
-        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
-            <p>{{ error }}</p>
-        </div>
+        <div class="alert">⚠ {{ error }}</div>
         {% endif %}
 
-        <form action="/analyze" method="post" enctype="multipart/form-data" class="space-y-6">
-            <div class="flex items-center justify-center w-full">
-                <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-indigo-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-50 transition-colors">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg class="w-10 h-10 mb-4 text-indigo-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                        </svg>
-                        <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
-                        <p class="text-xs text-gray-500">PDF or DOCX (MAX. 10MB)</p>
-                    </div>
-                    <input id="dropzone-file" name="file" type="file" class="hidden" accept=".pdf,.doc,.docx" required />
-                </label>
-            </div>
+        <form action="/analyze" method="post" enctype="multipart/form-data">
+            <label for="dropzone-file" class="dropzone-label">
+                <div class="dropzone-icon">📁</div>
+                <p class="dropzone-text"><span class="font-semibold" style="color: #818cf8;">Click to upload</span> or drag and drop</p>
+                <p class="dropzone-subtext">PDF, DOCX, or DOC (Max. 10MB)</p>
+                <input id="dropzone-file" name="file" type="file" style="display: none;" accept=".pdf,.doc,.docx" required />
+            </label>
 
-            <div class="text-center">
-                <button type="submit" class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-lg px-5 py-3.5 focus:outline-none shadow-lg transform transition hover:scale-[1.02]">
-                    Analyze Resume
-                </button>
-            </div>
+            <button type="submit" class="btn-submit">Analyze Resume →</button>
         </form>
         
-        <div class="mt-8 text-center text-sm text-gray-500">
-            <p>Secure & Private. Files are processed locally and deleted immediately.</p>
-        </div>
+        <p class="footer-note">Secure & Private. Files are processed locally and deleted immediately after analysis.</p>
     </div>
 
     <script>
         const fileInput = document.getElementById('dropzone-file');
-        const fileNameDisplay = document.querySelector('.text-indigo-500'); // Just reuse the icon for now or change text
-
         fileInput.addEventListener('change', function(e) {
             if (this.files && this.files.length > 0) {
                 const fileName = this.files[0].name;
-                document.querySelector('p.text-sm span').textContent = fileName;
-                document.querySelector('p.text-xs').textContent = "Ready to analyze";
+                document.querySelector('.dropzone-text').innerHTML = `Selected file: <span style="color:#6ee7b7; font-weight:600;">${fileName}</span>`;
+                document.querySelector('.dropzone-subtext').textContent = "Ready for upload";
             }
         });
     </script>

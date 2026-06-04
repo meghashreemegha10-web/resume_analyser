@@ -1,9 +1,10 @@
+import tempfile
+import os
 import hashlib
 import json
-import os
 from typing import Optional
 
-USERS_FILE = "data/users.json"
+USERS_FILE = os.path.join(tempfile.gettempdir(), "users.json")
 
 
 def _load_users() -> dict:

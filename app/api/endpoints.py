@@ -6,6 +6,7 @@ from app.services.analyzer import ResumeAnalyzer
 import shutil
 import os
 import uuid
+import tempfile
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -64,7 +65,7 @@ async def analyze_resume(request: Request, file: UploadFile = File(...)):
 
     # Save file temporarily
     filename = f"{uuid.uuid4()}_{file.filename}"
-    upload_dir = "data/uploads"
+    upload_dir = os.path.join(tempfile.gettempdir(), "uploads")
     os.makedirs(upload_dir, exist_ok=True)
     file_path = os.path.join(upload_dir, filename)
 
